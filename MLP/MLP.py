@@ -10,11 +10,13 @@ mnist = input_data.read_data_sets('../MNIST',one_hot=True)
 x = tf.placeholder(tf.float32,shape=[None,784])
 y = tf.placeholder(tf.float32,shape=[None,10])
 
+dropout = tf.placeholder(tf.float32)
 # MLP
 def MLP(n,hidden_list,out):
 	with tf.contrib.framework.arg_scope([layers.fully_connected],normalizer_fn=layers.batch_norm,normalizer_params={'scale':True}):
 		for h in hidden_list:
 			n = layers.fully_connected(n,h,activation_fn=tf.nn.relu)
+			n = tf.nn.dropout(n,keep_prob=dropout)
 		n = layers.fully_connected(n,out)
 	return n
 
@@ -34,7 +36,7 @@ with tf.Session() as sess:
 	for loop in range(50):
 		for i in range(mnist.train.images.shape[0]/batchsize):
 			images,label = mnist.train.next_batch(batchsize)
-			sess.run([train],feed_dict={x:images,y:label})
-		test_acc = sess.run(acc,feed_dict={x:mnist.test.images,y:mnist.test.labels})
-		train_acc = sess.run(acc,feed_dict={x:mnist.train.images,y:mnist.train.labels})
+			sess.run([train],feed_dict={x:images,y:label,dropout:0.5})
+		test_acc = sess.run(acc,feed_dict={x:mnist.test.images,y:mnist.test.labels,dropout:1.})
+		train_acc = sess.run(acc,feed_dict={x:mnist.train.images,y:mnist.train.labels,dropout:1.})
 		print 'Loop %d , train acc : %f, test acc : %f' % (loop,train_acc,test_acc)
